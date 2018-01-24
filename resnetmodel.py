@@ -86,7 +86,7 @@ def building_block(inputs, filters, is_training, projection_shortcut, strides, d
     """
 
 
-    shortcuts = inputs
+    shortcut = inputs
     inputs = batch_norm_relu(inputs, is_training, data_format)
 
 

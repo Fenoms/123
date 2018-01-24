@@ -219,7 +219,7 @@ def main(unused_argv):
 	os.environ['TF_ENABLE_WINOGRAD_NONFUSED'] = '1'
 
 	#set up the runconfig to only save checkpoints once per training cycle
-	run_config = tf.estimator.RunConfig().replace(save_checkpoints_steps =) 
+	run_config = tf.estimator.RunConfig().replace(save_checkpoints_steps = 2000) 
 	resnet_classifier = tf.estimator.Estimator(
 		model_fn = resnet_model_fn, model_dir = FLAGS.model_dir, config = run_config,
 		params = {
@@ -253,4 +253,4 @@ def main(unused_argv):
 if __name__ == '__main__':
 	tf.logging.set_verbosity(tf.logging.INFO)
 	FLAGS, unparsed = parser.parse_known_args()
-	print(str(sys.argv))
+	tf.app.run(argv = [sys.argv[0]] + unparsed)
