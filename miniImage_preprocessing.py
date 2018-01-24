@@ -16,6 +16,8 @@ input_dir = '/home/fenoms/master_thesis/miniImagenet/csv/'
 
 data_dir = '/home/fenoms/master_thesis/miniImagenet/'
 
+_IMAGE_SIZE = 224 #84
+
 def _read_image_as_array(image, dtype='float32'):
     f = Image.open(image)
     k = np.random.randint(0, 4)
@@ -84,8 +86,8 @@ def pre_process_data(data_path, out_to_file):
 def process_data(data_path, out_to_file):
     csv = pd.read_csv(data_path, sep = ',')
     labels = csv.label.unique().tolist()
-    tra_data = np.zeros((33280, 84, 84, 3), dtype=np.float32)
-    val_data = np.zeros((5120, 84, 84, 3), dtype=np.float32)
+    tra_data = np.zeros((33280, _IMAGE_SIZE, _IMAGE_SIZE, 3), dtype=np.float32)
+    val_data = np.zeros((5120, _IMAGE_SIZE, _IMAGE_SIZE, 3), dtype=np.float32)
     tra_labels = np.zeros((33280,), dtype=np.int8)
     val_labels = np.zeros((5210,), dtype=np.int8)
     nb_train_images = 0
@@ -100,8 +102,8 @@ def process_data(data_path, out_to_file):
             if c < 80:
                 try:
                     img_array = _read_image_as_array(f)
-                    img_array = scipy.misc.imresize(img_array, (84, 84))
-                    img_array = np.reshape(img_array, (1,84, 84, 3))
+                    img_array = scipy.misc.imresize(img_array, (_IMAGE_SIZE, _IMAGE_SIZE))
+                    img_array = np.reshape(img_array, (1,_IMAGE_SIZE, _IMAGE_SIZE, 3))
                     val_data[nb_val_images] = img_array
                     val_labels[nb_val_images] = k
                     c += 1
@@ -111,8 +113,8 @@ def process_data(data_path, out_to_file):
             elif c >= 80 and c < 600:
                 try:
                     img_array = _read_image_as_array(f)
-                    img_array = scipy.misc.imresize(img_array, (84, 84))
-                    img_array = np.reshape(img_array, (1,84, 84, 3))
+                    img_array = scipy.misc.imresize(img_array, (_IMAGE_SIZE, _IMAGE_SIZE))
+                    img_array = np.reshape(img_array, (1,_IMAGE_SIZE, _IMAGE_SIZE, 3))
                     tra_data[nb_train_images] = img_array
                     tra_labels[nb_train_images] = k
                     c += 1
