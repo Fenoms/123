@@ -11,21 +11,19 @@ import tensorflow as tf
 import resnetmodel
 import pickle
 
+
+_PATH = os.getcwd()
+
 parser = argparse.ArgumentParser(prog = 'miniImagenet_resnet_v2')
 
 parser.add_argument(
-	'--data_dir', type = str, default = '', help = 'The directory where the miniImagenet input data are stored')
+    '--resnet_size', type=int, default=50, choices=[34, 50, 101], help='choose which model to use.')
 
 parser.add_argument(
-	'--model_dir', type = str, default = '', help = 'The directory where the trained model will be stored')
+    '--data_format', type=str, default='channels_last', help='the data_format of data.')
 
-parser.add_argument(
-    '--resnet_size', type=int, default=34, choices=[34, 50, 101], help='The size of the ResNet model to use.')
-
-parser.add_argument(
-	'--data_format', type = str, default = 'channels_last', choices = ['channels_first', 'channels_last'], help = 'specify the data_format')
-
-_PATH = os.getcwd()
+#data_format: channel_first, chanenel_last
+_DATA_FORMAT = None
 
 _OMNIGLOT_DATA_DIR = _PATH + '/omniglot_data'
 
@@ -34,10 +32,10 @@ _MINIIMAGENET_DATA_DIR = _PATH + '/miniImagenet'
 _TRAIN_EPOCHS = 100
 #the number of training epochs between validation
 _EPOCHS_PER_EVAL = 1
-
+#batch size
 _BATCH_SIZE = 32
 	
-_DEFAULT_IMAGE_SIZE = 84
+_DEFAULT_IMAGE_SIZE = 84 # or 224
 
 _NUM_CHANNELS = 3
 
@@ -45,11 +43,21 @@ _MOMENTUM = 0.9
 
 _WEIGHT_DECAY = 1e-4
 
-_TOTAL_NUMBER_CLASSES = 64
+"""miniImagenet: 64 for directly train the classifier on training data,
+				 100 for few-shot training approch on training(64) and validation(16) and test(20) data
+   omniglot:     1623 for few-shot training approch on training(1200) and test(423) data
+"""
+_TOTAL_NUMBER_CLASSES = 64 
 
-_TRAIN_FILENAME = 'train.tfrecords'
+"""
+	first_step: directly train the classifier on training data
+	second_step: train with hard attention, see if the accuracy increases
+	third_step: add comparison module for few-shot learning
+"""
+_TRAIN_FILENAME = 'train.tfrecords'  
 
 _VAL_FILENAME = 'eval.tfrecords'
+
 
 _NUM_IMAGES = {
 	'train': 33005,
@@ -221,13 +229,13 @@ def main(unused_argv):
 	#set up the runconfig to only save checkpoints once per training cycle
 	run_config = tf.estimator.RunConfig().replace(save_checkpoints_steps = 2000) 
 	resnet_classifier = tf.estimator.Estimator(
-		model_fn = resnet_model_fn, model_dir = FLAGS.model_dir, config = run_config,
+		model_fn = resnet_model_fn, model_dir = '/tmp/exp_1', config = run_config,
 		params = {
 			'resnet_size': FLAGS.resnet_size,
 			'data_format': FLAGS.data_format
 		})
 
-	for _ in range(_EPOCHS_PER_EVAL):
+	for _ in range(_TRAIN_EPOCHS // _EPOCHS_PER_EVAL):
 		tensor_to_log = {
 			'learning_rate': 'learning_rate',
 			'cross_entropy': 'cross_entropy',
@@ -235,18 +243,18 @@ def main(unused_argv):
 		}
 
 		logging_hook = tf.train.LoggingTensorHook(
-			tensors = tensor_to_log, every_n_iter = 100)
+			tensors = tensor_to_log, every_n_iter = 5)
 
 		print("Starting a training cycle.")
 		resnet_classifier.train(
-			input_fn = lambda: input_fn(True, FLAGS.data_dir, _BATCH_SIZE),
+			input_fn = lambda: input_fn(True, _PATH, _BATCH_SIZE),
 			hooks = [logging_hook])
 
-	print('Starting to evaluate')
-	eval_results = resnet_classifier.evaluate(
-		input_fn = lambda: input_fn(False, FLAGS.data_dir, _BATCH_SIZE))
+		print('Starting to evaluate')
+		eval_results = resnet_classifier.evaluate(
+			input_fn = lambda: input_fn(False, _PATH, _BATCH_SIZE))
 
-	print(eval_results)
+		print(eval_results)
 
 
 
