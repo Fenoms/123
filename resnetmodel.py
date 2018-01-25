@@ -288,112 +288,114 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         data_format = 'channels_first' if tf.test.is_built_with_cuda() else 'channels_last'
 
 
-    # def model(inputs, is_training):
-    #     """constructs the ResNet model given the inputs"""
-
-
-    #     if data_format == 'channels_first':
-    #         # Convert the inputs from channels_last (NHWC) to channels_first (NCHW).
-    #         # This provides a large performance boost on GPU. See
-    #         # https://www.tensorflow.org/performance/performance_guide#data_formats
-    #         inputs = tf.transpose(inputs, [0, 3, 1, 2])
-
-    #     inputs = conv2d_fixed_padding(inputs = inputs, filters = 64, kernel_size = 7, strides = 2, data_format = data_format)
-
-    #     inputs = tf.identity(inputs, 'initial_conv')
-
-    #     inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 3, strides = 2, padding = 'SAME', data_format = data_format)
-
-    #     inputs = tf.identity(inputs, 'initial_max_pool')
-
-    #     inputs = block_layer(inputs = inputs, filters = 64, block_fn = block_fn, blocks = layers[0], strides = 1, 
-    #         is_training = is_training, name = 'blcok_layer1', data_format = data_format)
-
-    #     inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[1], strides = 2,
-    #         is_training = is_training, name = 'block_layer2', data_format = data_format)
-
-    #     inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[2], strides = 2, 
-    #         is_training = is_training, name = 'block_layer3', data_format = data_format)
-
-    #     inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
-    #         is_training = is_training, name = 'block_layer4', data_format = data_format)
-
-
-    #     inputs = batch_norm_relu(inputs, is_training, data_format)
-        
-    #     inputs = tf.layers.average_pooling2d(inputs = inputs, pool_size = 3, strides = 1, padding = 'VALID', data_format = data_format)
-
-    #     inputs = tf.identity(inputs, 'final_avg_pool')
-
-    #     inputs = tf.reshape(inputs, [-1, 512 if block_fn is building_block else 2048])
-
-    #     #TODO
-    #     inputs = tf.layers.dense(inputs = inputs, units = num_classes )
-
-    #     outputs = tf.identity(inputs, 'final_dense')
-
-    #     return outputs
-
-    # return model
-
     def model(inputs, is_training):
+        """constructs the ResNet model given the inputs"""
 
-    	if data_format == 'channels_first':
-    		inputs = tf.transpose(inputs, [0, 3, 1, 2])
 
-    	##84
-    	inputs = conv_block(inputs = inputs, filters = 64, kernel_size = 3, strides = 1, 
-    				is_training = is_training, data_format = data_format)
+        if data_format == 'channels_first':
+            # Convert the inputs from channels_last (NHWC) to channels_first (NCHW).
+            # This provides a large performance boost on GPU. See
+            # https://www.tensorflow.org/performance/performance_guide#data_formats
+            inputs = tf.transpose(inputs, [0, 3, 1, 2])
 
-    	tf.identity(inputs, 'conv1')
+        inputs = conv2d_fixed_padding(inputs = inputs, filters = 64, kernel_size = 7, strides = 2, data_format = data_format)
 
-    	#84
-    	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = tf.identity(inputs, 'initial_conv')
 
-    	tf.identity(inputs, 'pool1')
+        inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 3, strides = 2, padding = 'SAME', data_format = data_format)
 
-    	#42
-    	inputs = conv_block(inputs = inputs, filters = 128, kernel_size = 3, strides = 2, 
-    				is_training = is_training, data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = tf.identity(inputs, 'initial_max_pool')
 
-    	tf.identity(inputs, 'conv2')
+        inputs = block_layer(inputs = inputs, filters = 64, block_fn = block_fn, blocks = layers[0], strides = 1, 
+            is_training = is_training, name = 'blcok_layer1', data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[1], strides = 2,
+            is_training = is_training, name = 'block_layer2', data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[2], strides = 2, 
+            is_training = is_training, name = 'block_layer3', data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
+            is_training = is_training, name = 'block_layer4', data_format = data_format)
 
-    	#21
-    	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+        print('height:', inputs.shape[1])
+        inputs = batch_norm_relu(inputs, is_training, data_format)
+        
+        inputs = tf.layers.average_pooling2d(inputs = inputs, pool_size = 3, strides = 1, padding = 'VALID', data_format = data_format)
 
-    	tf.identity(inputs, 'pool2')
+        inputs = tf.identity(inputs, 'final_avg_pool')
 
-    	#11
-    	inputs = conv_block(inputs = inputs, filters = 256, kernel_size = 3, strides = 1, 
-    				is_training = is_training, data_format = data_format)
+        inputs = tf.reshape(inputs, [-1, 512 if block_fn is building_block else 2048])
 
-    	tf.identity(inputs, 'conv3')
+        #TODO
+        inputs = tf.layers.dense(inputs = inputs, units = num_classes )
 
-    	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
+        outputs = tf.identity(inputs, 'final_dense')
 
-    	#11
-    	inputs = conv_block(inputs = inputs, filters = 512, kernel_size = 3, strides = 2, 
-    				is_training = is_training, data_format = data_format)
-
-    	tf.identity(inputs, 'conv4')
-
-    	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
-    	
-    	inputs = tf.layers.flatten(inputs)
-
-    	tf.identity(inputs, 'flatten1')
-
-    	inputs = tf.layers.dense(inputs = inputs, units = 1000)
-
-    	tf.identity(inputs, 'dense1')
-
-    	outputs = tf.layers.dense(inputs = inputs, units = num_classes)
-
-    	tf.identity(outputs, 'final_dense')
-
-    	return outputs
+        return outputs
 
     return model
+
+    # def model(inputs, is_training):
+
+    # 	if data_format == 'channels_first':
+    # 		inputs = tf.transpose(inputs, [0, 3, 1, 2])
+
+    # 	##84
+    # 	inputs = conv_block(inputs = inputs, filters = 64, kernel_size = 3, strides = 1, 
+    # 				is_training = is_training, data_format = data_format)
+
+    # 	tf.identity(inputs, 'conv1')
+
+    # 	#84
+    # 	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+
+    # 	tf.identity(inputs, 'pool1')
+
+    # 	#42
+    # 	inputs = conv_block(inputs = inputs, filters = 128, kernel_size = 3, strides = 2, 
+    # 				is_training = is_training, data_format = data_format)
+
+    # 	tf.identity(inputs, 'conv2')
+
+    # 	#21
+    # 	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+
+    # 	tf.identity(inputs, 'pool2')
+
+    # 	#11
+    # 	inputs = conv_block(inputs = inputs, filters = 256, kernel_size = 3, strides = 1, 
+    # 				is_training = is_training, data_format = data_format)
+
+    # 	tf.identity(inputs, 'conv3')
+
+    # 	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
+
+    # 	#11
+    # 	inputs = conv_block(inputs = inputs, filters = 512, kernel_size = 3, strides = 2, 
+    # 				is_training = is_training, data_format = data_format)
+
+    # 	tf.identity(inputs, 'conv4')
+
+    # 	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
+    	
+    # 	inputs = tf.layers.flatten(inputs)
+
+    # 	tf.identity(inputs, 'flatten1')
+
+    # 	inputs = tf.layers.dense(inputs = inputs, units = 1000)
+
+    # 	tf.identity(inputs, 'dense1')
+
+    # 	outputs = tf.layers.dense(inputs = inputs, units = num_classes)
+
+    # 	tf.identity(outputs, 'final_dense')
+
+    # 	return outputs
+
+    # return model
 
 def miniImagenet_resnet_v2(resnet_size, num_classes, data_format = None):
     """
@@ -401,7 +403,7 @@ def miniImagenet_resnet_v2(resnet_size, num_classes, data_format = None):
     """
 
     model_params = {
-        18: {'blcok': building_block, 'layers': [2,2,2,2]},
+        18: {'block': building_block, 'layers': [2,2,2,2]},
         34: {'block': building_block, 'layers': [3,4,6,3]},
         50: {'block': bottleneck_block, 'layers': [3,4,6,3]},
         101: {'block': bottleneck_block, 'layers': [3,4,6,3]},
