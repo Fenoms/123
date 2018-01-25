@@ -341,32 +341,37 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
     	if data_format == 'channels_first':
     		inputs = tf.transpose(inputs, [0, 3, 1, 2])
 
-
-    	inputs = conv_block(inputs = inputs, filters = 64, kernel_size = 3, strides = 2, 
+    	##84
+    	inputs = conv_block(inputs = inputs, filters = 64, kernel_size = 3, strides = 1, 
     				is_training = is_training, data_format = data_format)
 
     	tf.identity(inputs, 'conv1')
 
-    	inputs = tf.layers.max_pool2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+    	#84
+    	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
 
     	tf.identity(inputs, 'pool1')
 
+    	#42
     	inputs = conv_block(inputs = inputs, filters = 128, kernel_size = 3, strides = 2, 
     				is_training = is_training, data_format = data_format)
 
     	tf.identity(inputs, 'conv2')
 
-    	inputs = tf.layers.max_pool2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
+    	#21
+    	inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'SAME', data_format = data_format)
 
     	tf.identity(inputs, 'pool2')
 
-    	inputs = conv_block(inputs = inputs, filters = 256, kernel_size = 3, strides = 2, 
+    	#11
+    	inputs = conv_block(inputs = inputs, filters = 256, kernel_size = 3, strides = 1, 
     				is_training = is_training, data_format = data_format)
 
     	tf.identity(inputs, 'conv3')
 
     	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
 
+    	#11
     	inputs = conv_block(inputs = inputs, filters = 512, kernel_size = 3, strides = 2, 
     				is_training = is_training, data_format = data_format)
 
@@ -374,13 +379,15 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
 
     	inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
     	
-    	inputs = tf.reshape(inputs, [-1, 512])
+    	inputs = tf.layers.flatten(inputs)
 
-    	inputs = tf.dense(inputs = inputs, units = 1000)
+    	tf.identity(inputs, 'flatten1')
+
+    	inputs = tf.layers.dense(inputs = inputs, units = 1000)
 
     	tf.identity(inputs, 'dense1')
 
-    	outputs = tf.dense(inputs = inputs, units = num_classes)
+    	outputs = tf.layers.dense(inputs = inputs, units = num_classes)
 
     	tf.identity(outputs, 'final_dense')
 

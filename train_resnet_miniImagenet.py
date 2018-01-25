@@ -128,14 +128,14 @@ def input_fn(is_training, path, batch_size):
 	        image = tf.maximum(image, 0.0)
 	        #image = tf.image.resize_image_with_crop_pad(image, target_height = _DEFAULT_IMAGE_SIZE
 	        #													target_width = _DEFAULT_IMAGE_SIZE)
-	    label = tf.cast(parsed['label'], tf.uint8)
+	    label = tf.cast(parsed['label'], tf.int32)
 	    return image, tf.one_hot(label, _TOTAL_NUMBER_CLASSES)
 
 	dataset = tf.data.TFRecordDataset(filename)
 	dataset = dataset.shuffle(buffer_size=1000)
 	dataset = dataset.map(record_parser)
 	dataset = dataset.repeat(_TRAIN_EPOCHS)
-	dataset = dataset.batch(batch_size)
+	dataset = dataset.batch(_BATCH_SIZE)
 	iterator = dataset.make_one_shot_iterator()
 	images, labels = iterator.get_next()
 	return images, labels
