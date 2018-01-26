@@ -298,6 +298,9 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
             # https://www.tensorflow.org/performance/performance_guide#data_formats
             inputs = tf.transpose(inputs, [0, 3, 1, 2])
 
+
+        inputs = tf.layers.conv2d(inputs = inputs, filters = 3, kernel_size = 84, kernel_initializer = tf.constant_initializer(1.0), activation = tf.sigmoid)
+
         inputs = conv2d_fixed_padding(inputs = inputs, filters = 64, kernel_size = 7, strides = 2, data_format = data_format)
 
         print('height:', inputs.shape[1])
@@ -313,13 +316,13 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         print('height:', inputs.shape[1])
 
         #attention module
-        inputs = tf.reshape(inputs, [-1, 21*21])
-        inputs = tf.layers.dense(inputs = inputs, units = 21*21, activation = tf.tanh)
+        # inputs = tf.reshape(inputs, [-1, 21*21])
+        # inputs = tf.layers.dense(inputs = inputs, units = 21*21, activation = tf.tanh)
 
-        inputs = tf.reshape(inputs, [-1, 64])
-        inputs = tf.layers.dense(inputs = inputs, units = 64, activation = tf.sigmoid)
+        # inputs = tf.reshape(inputs, [-1, 64])
+        # inputs = tf.layers.dense(inputs = inputs, units = 64, activation = tf.sigmoid)
 
-        inputs = tf.reshape(inputs, [-1, 21, 21, 64])
+        # inputs = tf.reshape(inputs, [-1, 21, 21, 64])
 
         inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[1], strides = 2,
             is_training = is_training, name = 'block_layer2', data_format = data_format)
