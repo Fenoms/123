@@ -311,6 +311,16 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         inputs = block_layer(inputs = inputs, filters = 64, block_fn = block_fn, blocks = layers[0], strides = 1, 
             is_training = is_training, name = 'blcok_layer1', data_format = data_format)
         print('height:', inputs.shape[1])
+
+        #attention module
+        inputs = tf.reshape(inputs, [-1, 21*21])
+        inputs = tf.layers.dense(inputs = inputs, units = 21*21, activation = tf.tanh)
+
+        inputs = tf.reshape(inputs, [-1, 64])
+        inputs = tf.layers.dense(inputs = inputs, units = 64, activation = tf.sigmoid)
+
+        inputs = tf.reshape(inputs, [-1, 21, 21, 64])
+
         inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[1], strides = 2,
             is_training = is_training, name = 'block_layer2', data_format = data_format)
         print('height:', inputs.shape[1])
@@ -320,7 +330,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
             is_training = is_training, name = 'block_layer4', data_format = data_format)
 
-        print('height:', inputs.shape[1])
+        print('height:', inputs.shape)
         inputs = batch_norm_relu(inputs, is_training, data_format)
         
         inputs = tf.layers.average_pooling2d(inputs = inputs, pool_size = 3, strides = 1, padding = 'VALID', data_format = data_format)
@@ -332,6 +342,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         #TODO
         inputs = tf.layers.dense(inputs = inputs, units = num_classes )
 
+        print(inputs.shape)
         outputs = tf.identity(inputs, 'final_dense')
 
         return outputs
