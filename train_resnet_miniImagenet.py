@@ -28,11 +28,11 @@ _OMNIGLOT_DATA_DIR = _PATH + '/omniglot_data'
 
 _MINIIMAGENET_DATA_DIR = _PATH + '/miniImagenet'
 #total training epochs
-_TRAIN_EPOCHS = 100
+_TRAIN_EPOCHS = 70
 #the number of training epochs between validation
 _EPOCHS_PER_EVAL = 1
 #batch size
-_BATCH_SIZE = 32
+_BATCH_SIZE = 64
     
 _DEFAULT_IMAGE_SIZE = 84 # or 224
 
