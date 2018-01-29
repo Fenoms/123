@@ -335,7 +335,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         print('height:', inputs.shape[1])
         inputs = tf.identity(inputs, 'initial_max_pool')
 
-        inputs = block_layer(inputs = inputs, filters = 64, block_fn = block_fn, blocks = layers[0], strides = 1, 
+        inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[0], strides = 1, 
             is_training = is_training, name = 'blcok_layer1', data_format = data_format)
         print('height:', inputs.shape[1])
 
@@ -348,7 +348,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
 
         # inputs = tf.reshape(inputs, [-1, 21, 21, 64])
 
-        inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[1], strides = 2,
+        inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[1], strides = 2,
             is_training = is_training, name = 'block_layer2', data_format = data_format)
         print('height:', inputs.shape[1])
         # inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[2], strides = 2, 
@@ -357,7 +357,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         # inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
         #     is_training = is_training, name = 'block_layer4', data_format = data_format)
 
-        inputs = tf.layers.conv2d(inputs = inputs, filters = 256, kernel_size = 3, strides = 2, padding = 'SAME', 
+        inputs = tf.layers.conv2d(inputs = inputs, filters = 512, kernel_size = 3, strides = 2, padding = 'SAME', 
         		kernel_initializer = tf.variance_scaling_initializer())
 
         print('height:', inputs.shape)
@@ -371,7 +371,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
 
         inputs = tf.identity(inputs, 'final_avg_pool')
 
-        inputs = tf.reshape(inputs, [-1, 256 if block_fn is building_block else 2048])
+        inputs = tf.layers.flatten(inputs)
 
         #TODO
         inputs = tf.layers.dense(inputs = inputs, units = num_classes )
