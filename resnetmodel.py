@@ -327,17 +327,16 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         #embedding network
         inputs = conv2d_fixed_padding(inputs = inputs, filters = 64, kernel_size = 7, strides = 2, data_format = data_format)
 
-        print('height:', inputs.shape[1])
+        print('height:', inputs.shape)
         inputs = tf.identity(inputs, 'initial_conv')
 
         inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 3, strides = 2, padding = 'SAME', data_format = data_format)
 
-        print('height:', inputs.shape[1])
         inputs = tf.identity(inputs, 'initial_max_pool')
 
-        inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[0], strides = 1, 
+        inputs = block_layer(inputs = inputs, filters = 64, block_fn = block_fn, blocks = layers[0], strides = 1, 
             is_training = is_training, name = 'blcok_layer1', data_format = data_format)
-        print('height:', inputs.shape[1])
+        print('height:', inputs.shape)
 
         #attention module
         # inputs = tf.reshape(inputs, [-1, 21*21])
@@ -348,30 +347,27 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
 
         # inputs = tf.reshape(inputs, [-1, 21, 21, 64])
 
-        inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[1], strides = 2,
+        inputs = block_layer(inputs = inputs, filters = 96, block_fn = block_fn, blocks = layers[1], strides = 2,
             is_training = is_training, name = 'block_layer2', data_format = data_format)
-        print('height:', inputs.shape[1])
-        # inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[2], strides = 2, 
-        #     is_training = is_training, name = 'block_layer3', data_format = data_format)
-        # print('height:', inputs.shape[1])
-        # inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
-        #     is_training = is_training, name = 'block_layer4', data_format = data_format)
-
-        inputs = tf.layers.conv2d(inputs = inputs, filters = 512, kernel_size = 3, strides = 2, padding = 'SAME', 
-        		kernel_initializer = tf.variance_scaling_initializer())
-
         print('height:', inputs.shape)
+
+        inputs = block_layer(inputs = inputs, filters = 128, block_fn = block_fn, blocks = layers[2], strides = 2, 
+            is_training = is_training, name = 'block_layer3', data_format = data_format)
+        print('height:', inputs.shape)
+
+        inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[3], strides = 2, 
+            is_training = is_training, name = 'block_layer4', data_format = data_format)
+
         inputs = batch_norm_relu(inputs, is_training, data_format)
         
         inputs = tf.layers.average_pooling2d(inputs = inputs, pool_size = 3, strides = 1, padding = 'VALID', data_format = data_format)
-
 
         print('height:', inputs.shape)
         inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
 
         inputs = tf.identity(inputs, 'final_avg_pool')
 
-        inputs = tf.layers.flatten(inputs)
+        inputs = tf.reshape(inputs, (-1, 256))
 
         #TODO
         inputs = tf.layers.dense(inputs = inputs, units = num_classes )
