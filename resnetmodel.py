@@ -303,23 +303,24 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         #localize network to generate the transformation parameters
         raw_inputs = inputs
 
-        inputs = tf.layers.conv2d(inputs = inputs, filters = 32, strides = 2, kernel_size = 5, kernel_initializer=tf.variance_scaling_initializer())
+        inputs = tf.layers.conv2d(inputs = inputs, filters = 32, strides = 2, kernel_size = 5, padding = 'SAME', kernel_initializer=tf.variance_scaling_initializer())
 
+        print(inputs.shape)
         inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'VALID')
-
-        inputs = tf.layers.conv2d(inputs = inputs, filters = 64, strides = 2, kernel_size = 5, kernel_initializer = tf.variance_scaling_initializer())
-
+        print(inputs.shape)
+        inputs = tf.layers.conv2d(inputs = inputs, filters = 64, strides = 2, kernel_size = 5, padding = 'SAME', kernel_initializer = tf.variance_scaling_initializer())
+        print(inputs.shape)
         inputs = tf.layers.max_pooling2d(inputs = inputs, pool_size = 2, strides = 2, padding = 'VALID')
-
+        print(inputs.shape)
         inputs = tf.layers.dropout(inputs = inputs, rate = _DROPOUT_RATE)
 
         inputs = tf.layers.flatten(inputs = inputs)
 
         inputs = tf.layers.dense(inputs = inputs, units = 128)
-
+        print(inputs.shape)
         trans_parameters = tf.layers.dense(inputs = inputs, units = 6)
-
-        inputs = stn(raw_inputs, trans_parameters)
+        print(trans_parameters.shape)
+        inputs = stn(input_fmap = raw_inputs, theta = trans_parameters, out_dims = [60, 60])
 
 
 
@@ -353,8 +354,8 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
         inputs = block_layer(inputs = inputs, filters = 256, block_fn = block_fn, blocks = layers[2], strides = 2, 
             is_training = is_training, name = 'block_layer3', data_format = data_format)
         print('height:', inputs.shape[1])
-        inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
-            is_training = is_training, name = 'block_layer4', data_format = data_format)
+        # inputs = block_layer(inputs = inputs, filters = 512, block_fn = block_fn, blocks = layers[3], strides = 2, 
+        #     is_training = is_training, name = 'block_layer4', data_format = data_format)
 
         print('height:', inputs.shape)
         inputs = batch_norm_relu(inputs, is_training, data_format)
@@ -365,7 +366,7 @@ def miniImagenet_resnet_v2_generator(block_fn, layers, num_classes, data_format 
 
         inputs = tf.identity(inputs, 'final_avg_pool')
 
-        inputs = tf.reshape(inputs, [-1, 512 if block_fn is building_block else 2048])
+        inputs = tf.reshape(inputs, [-1, 256 if block_fn is building_block else 2048])
 
         #TODO
         inputs = tf.layers.dense(inputs = inputs, units = num_classes )
